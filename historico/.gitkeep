@@ -1,0 +1,4 @@
+# Esta pasta armazena os relatórios HTML gerados automaticamente pelo plugin.
+# Arquivos salvos aqui:
+#   AlphaGen_YYYY-MM-DD.html  — relatório de cada sessão de análise
+#   checklist-ciclo.md        — multiplicadores de convicção (âncora entre sessões)

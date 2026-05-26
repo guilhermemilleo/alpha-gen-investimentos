@@ -1,0 +1,9 @@
+{
+  "name": "alpha-gen-investimentos",
+  "version": "2.0.0",
+  "description": "Analista e consultor de investimentos pessoal. Framework Alpha-Gen (Howard Marks / ARCA) com coleta de dados em batch via script Python (BCB, Yahoo Finance, Status Invest, CoinMarketCap), cache 24h e fail-loud. Inclui análise mensal de aporte, análise rápida pontual e atualização do Checklist de Ciclo.",
+  "author": {
+    "name": "Guilherme"
+  },
+  "keywords": ["investimentos", "alpha-gen", "arca", "howard-marks", "fiis", "acoes", "renda-fixa", "cripto"]
+}
