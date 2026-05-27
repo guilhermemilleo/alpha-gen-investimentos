@@ -78,15 +78,17 @@ Campos extraídos: Preço USD, variação 24h/7d/30d, Market Cap, Volume 24h, AT
 - ❌ **PROIBIDO** estimar valores faltantes ("aproximadamente 12%", "média do setor", "vou usar valor de referência").
 - ❌ **PROIBIDO** chamar `web_fetch` para domínios fora da whitelist.
 
-### Quando um Campo Está Faltante (regra única)
+### Quando um Campo Está Faltante (regra única — REFORÇADA v2.1)
+
+🚨 **Default na v2.1: pedir manualmente é OBRIGATÓRIO.** Marcar como indisponível só vale se o usuário pedir explicitamente após ser perguntado.
 
 1. O script já tentou nas fontes desta página. Falhou.
-2. Marcar o campo como **INDISPONÍVEL** no relatório.
-3. **Perguntar ao usuário** explicitamente, exatamente neste formato:
+2. **Perguntar ao usuário** explicitamente, exatamente neste formato:
 
-   > "Não encontrei [CAMPO] de [TICKER/INDICADOR] no [FONTE]. Pode me informar o valor manualmente? Se preferir, marco como indisponível e sigo com a regra do sistema (nota 5 + flag ⚠️ para o fator afetado)."
+   > "🔍 Dado faltante: não encontrei [CAMPO] de [TICKER/INDICADOR] no [FONTE]. Pode me informar o valor manualmente para eu prosseguir? (Se preferir marcar como indisponível, me avise — anoto nota 5 + ⚠️ para o fator afetado.)"
 
-4. **Aguardar resposta antes de continuar.** Nunca improvisar, nunca buscar em outra fonte, nunca chutar.
+3. **Aguardar resposta antes de continuar.** Nunca improvisar, nunca buscar em outra fonte, nunca chutar.
+4. **Registrar a falha em `historico/_missing_data_log.md`** (formato em `skills/analise-aporte/SKILL.md`). Isso permite identificar campos que falham repetidamente e melhorar o plugin no futuro.
 
 ### Cache
 

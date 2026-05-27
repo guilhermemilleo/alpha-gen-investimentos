@@ -126,4 +126,4 @@ Veredito em 2-3 linhas.
 - Carry/DY nunca substitui Margem de Segurança
 - Margem negativa: declarar com flag ⚠️ e o valor exato
 - **Cache de 24h ativo.** Para forçar refresh: `--sem-cache` no script.
-- **Campo em `_missing`** → perguntar ao usuário. Nunca improvisar.
+- **Campo em `_missing`** → perguntar ao usuário manualmente (regra reforçada v2.1). Nunca improvisar, nunca buscar em outra fonte, nunca chutar. Registrar a ocorrência em `historico/_missing_data_log.md`.

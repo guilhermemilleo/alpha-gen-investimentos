@@ -1,4 +1,4 @@
-# Alpha-Gen Investimentos — v2.0
+# Alpha-Gen Investimentos — v2.1
 
 Plugin de análise e consultoria de investimentos pessoal baseado no framework Alpha-Gen v7.0, filosofia Howard Marks / Oaktree Capital.
 
@@ -38,23 +38,23 @@ Atualiza o Checklist de Ciclo (multiplicadores ARCA). Coleta dados macro via `--
 
 ### Script de Coleta
 
-`scripts/coletar_dados.py` — comando único, três modos:
+`skills/analise-aporte/scripts/coletar_dados.py` — comando único, três modos:
 
 ```bash
 # Macro completo (BCB + Yahoo Finance)
-python scripts/coletar_dados.py --macro
+python skills/analise-aporte/scripts/coletar_dados.py --macro
 
 # Ações e FIIs em batch
-python scripts/coletar_dados.py --ativos PETR4,HGLG11,VALE3
+python skills/analise-aporte/scripts/coletar_dados.py --ativos PETR4,HGLG11,VALE3
 
 # Criptomoedas
-python scripts/coletar_dados.py --cripto BTC,ETH,SOL
+python skills/analise-aporte/scripts/coletar_dados.py --cripto BTC,ETH,SOL
 
 # Combinado
-python scripts/coletar_dados.py --macro --ativos PETR4,HGLG11 --cripto BTC
+python skills/analise-aporte/scripts/coletar_dados.py --macro --ativos PETR4,HGLG11 --cripto BTC
 
 # Forçar refresh (ignora cache)
-python scripts/coletar_dados.py --macro --sem-cache
+python skills/analise-aporte/scripts/coletar_dados.py --macro --sem-cache
 ```
 
 Saída: JSON estruturado em stdout. Logs em stderr.
@@ -72,7 +72,7 @@ Se o script não conseguir um dado nas 4 fontes, o campo volta `null` e aparece 
 ### Instalação das Dependências
 
 ```bash
-pip install --break-system-packages -r scripts/requirements.txt
+pip install --break-system-packages -r skills/analise-aporte/scripts/requirements.txt
 ```
 
 Dependências mínimas: `requests`, `beautifulsoup4`, `lxml`, `yfinance`.
@@ -83,17 +83,18 @@ Dependências mínimas: `requests`, `beautifulsoup4`, `lxml`, `yfinance`.
 
 ```
 alpha-gen-investimentos/
-├── scripts/
-│   ├── coletar_dados.py           # Script único de coleta em batch
-│   └── requirements.txt
 ├── skills/
 │   ├── analise-aporte/            # Skill principal de aporte mensal
 │   │   ├── SKILL.md
+│   │   ├── scripts/
+│   │   │   ├── coletar_dados.py   # Script único de coleta em batch
+│   │   │   └── requirements.txt
 │   │   └── references/
-│   │       ├── fontes-dados.md    # Whitelist estrita das 4 fontes
+│   │       ├── fontes-dados.md             # Whitelist estrita das 4 fontes
 │   │       ├── sistema-score-v7.md
 │   │       ├── regras-cenarios.md
-│   │       └── html-output.md
+│   │       ├── html-output.md
+│   │       └── melhorias-profissionais.md  # NOVO v2.1 — gaps + propostas
 │   ├── analise-rapida/            # Skill de consulta pontual
 │   │   └── SKILL.md
 │   └── atualizar-ciclo/           # Skill de atualização do checklist macro
@@ -114,7 +115,14 @@ alpha-gen-investimentos/
 
 ## Changelog
 
-### v2.0 (esta versão)
+### v2.1 (esta versão)
+- **Cenário C reformulado:** universo agora vem de planilha Excel anexada pelo usuário, não mais "varredura das 4 fontes". Pergunta obrigatória de abertura: anexa Excel ou pula Cenário C
+- **Fail-loud reforçado:** pedir dado manualmente virou DEFAULT obrigatório. Marcar como indisponível só com confirmação explícita do usuário
+- **Log persistente de dados faltantes** (`historico/_missing_data_log.md`): registra todo gap por sessão para identificar padrões estruturais de falha das fontes
+- **Nova referência `melhorias-profissionais.md`:** análise de gaps no score atual frente ao que sell-side, gestoras de FIIs e research de cripto usam, com 25+ propostas categorizadas por prioridade e custo
+- Inconsistências removidas: referências a Investidor10/BTG/XP no Cenário C foram eliminadas (haviam sobrado da v1.0)
+
+### v2.0
 - Coleta de dados via script Python em batch (consumo de tokens drasticamente menor)
 - Whitelist estrita de 4 fontes (BCB, Yahoo Finance, Status Invest, CoinMarketCap)
 - Cache 24h em disco compartilhado entre skills
