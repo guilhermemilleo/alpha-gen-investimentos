@@ -2,9 +2,9 @@
 
 > **Status:** este é um documento de **propostas para revisão do usuário**, não regras ativas do sistema. O score em produção continua sendo o da Seção 02 de `sistema-score-v7.md`. As propostas aqui são gaps identificados ao revisar o framework contra o que sell-side equity research, gestoras de FIIs (Kinea, RBR, Capitânia) e research de cripto (Glassnode, Coin Metrics) usam profissionalmente.
 >
-> A ideia é o usuário escolher quais incorporar — algumas custam zero implementação (mexer no peso), outras exigem dado novo no script (`coletar_dados.py`).
+> A ideia é o usuário escolher quais incorporar — algumas custam zero implementação (mexer no peso), outras exigem capturar um dado novo na coleta via firecrawl.
 >
-> **Notação:** 🟢 alta prioridade, sem custo · 🟡 média, exige campo novo · 🔴 baixa, exige fonte externa fora da whitelist.
+> **Notação:** 🟢 alta prioridade, sem custo · 🟡 média, exige campo novo · 🔴 baixa, exige fonte que nem as preferenciais nem a busca livre do firecrawl cobrem de forma confiável.
 
 ---
 
@@ -17,7 +17,7 @@
 - [G.4a] P/L atual vs. histórico 5 anos — peso 60% do [G.4]
 - [G.4b] EV/EBITDA atual vs. histórico — peso 40% do [G.4]
 
-**Status Invest cobre EV/EBITDA?** Sim — já está na página de cada ação. Custo: adicionar 1 campo no parser do `coletar_dados.py`.
+**Investidor10 cobre EV/EBITDA?** Sim — já está na página de cada ação. Custo: incluir esse campo na extração via firecrawl.
 
 ### 🟢 1.2 Free Cash Flow Yield
 **Problema:** o sistema mede lucro contábil (LPA, ROE) mas não fluxo de caixa real. Empresa pode ter lucro alto e queimar caixa (capex, capital de giro). Buffett pesa FCF acima de lucro contábil.
@@ -26,7 +26,7 @@
 - FCF Yield = FCF últimos 12m / Market Cap
 - >8% = 9–10 · 5–8% = 7–8 · 3–5% = 5–6 · 1–3% = 3–4 · <1% ou negativo = 0–2
 
-**Status Invest cobre?** Indiretamente (FCO, Capex). Pode calcular: FCF = FCO − Capex. Adicionar no parser.
+**Investidor10 cobre?** Indiretamente (FCO, Capex). Pode calcular: FCF = FCO − Capex. Adicionar à extração via firecrawl.
 
 ### 🟡 1.3 Crescimento de Receita (CAGR 3 anos)
 **Problema:** ROE/ROIC altos em empresa que não cresce = armadilha de valor. Faltam métricas de growth.
@@ -34,7 +34,7 @@
 **Proposta:** adicionar fator [I] Crescimento Composto — peso 5%.
 - CAGR receita 3 anos: >15% = 9–10 · 8–15% = 7–8 · 3–8% = 5–6 · 0–3% = 3–4 · negativo = 0–2
 
-**Status Invest cobre?** Tem histórico de receita anual. Custo: parser precisa ler tabela histórica, não só "current".
+**Investidor10 cobre?** Tem histórico de receita anual. Custo: a busca via firecrawl precisa capturar a tabela histórica, não só o valor atual.
 
 ### 🟢 1.4 Dívida Líquida em STRESS, não só nominal
 **Problema:** [G.3] usa Dívida/EBITDA atual. Em momento de queda de EBITDA (recessão), o ratio explode. Marks recomenda fazer stress: "se EBITDA cair 30%, ainda passa?"
@@ -48,12 +48,12 @@
 
 **Proposta:** flag qualitativa em [B] Qualidade — se #ações outstanding cresceu >3% a.a. nos últimos 3 anos: -1 em [B] obrigatório.
 
-**Cobertura:** Status Invest tem nº de ações. Custo: parser lê histórico.
+**Cobertura:** Investidor10 tem nº de ações. Custo: a busca via firecrawl precisa capturar o histórico.
 
 ### 🔴 1.6 Earnings revisions / consenso analistas
 **Problema:** revisões de consenso (analistas subindo ou cortando estimativas) são um dos sinais mais potentes em equity research quantitativo (modelo de Piotroski + revisões).
 
-**Proposta:** NÃO incorporar agora — exige fonte externa (Bloomberg, Refinitiv, Reuters) fora da whitelist. Manter como nota mental.
+**Proposta:** NÃO incorporar agora — exige fonte paga (Bloomberg, Refinitiv, Reuters) que o firecrawl não consegue acessar de forma confiável. Manter como nota mental.
 
 ---
 
@@ -66,7 +66,7 @@
 - Cobertura = (FFO 12m − Capex) / Distribuído 12m
 - >1,2× = 9–10 · 1,0–1,2× = 7–8 · 0,9–1,0× = 5–6 · 0,8–0,9× = 3–4 · <0,8× = 0–1 + ⚠️ obrigatória
 
-**Status Invest cobre?** Parcialmente — relatórios gerenciais mensais têm FFO mas não estão na página padrão. Provavelmente vai cair em `_missing` → manual. **Mas é um dos campos mais importantes.**
+**Investidor10 cobre?** Parcialmente — relatórios gerenciais mensais têm FFO mas não estão na página padrão. Provavelmente vai exigir busca livre via firecrawl ou pergunta manual. **Mas é um dos campos mais importantes.**
 
 ### 🟢 2.2 Alavancagem (LTV / Dívida/GAV)
 **Problema:** o score atual não pesa alavancagem do FII. FIIs alavancados (LTV >30%) têm risco amplificado em ciclo de juros alto.
@@ -74,7 +74,7 @@
 **Proposta:** desdobrar [F.4] (concentração maior inquilino) → criar [F.4a] Concentração inquilino (peso 8%) e [F.4b] LTV/Dívida (peso 7%).
 - LTV <10% = 9–10 · 10–20% = 7–8 · 20–30% = 5–6 · 30–40% = 3–4 · >40% = 0–2 + ⚠️
 
-**Cobertura:** Status Invest tem "Patrimônio Líquido" mas não traz LTV direto. Buscar em relatório gerencial → fail-loud manual.
+**Cobertura:** Investidor10 tem "Patrimônio Líquido" mas não traz LTV direto. Buscar em relatório gerencial via busca livre do firecrawl → fail-loud manual se não encontrar.
 
 ### 🟢 2.3 Qualidade da Receita: aluguel vs. financeiro
 **Problema:** muitos FIIs de tijolo melhoram DY temporariamente vendendo imóvel ou rolando receita financeira (aplicações). Score não distingue receita recorrente (aluguel) de não-recorrente.
@@ -145,21 +145,21 @@ O sistema já tem "Retorno Real Líquido Ajustado" mas a justificativa muitas ve
 - -1 a 0 = fundo provável (1,2–1,4)
 - < -1 = capitulação histórica (1,5)
 
-**Cobertura:** CoinMarketCap **não** tem MVRV. Glassnode tem (fora da whitelist). Alternativa: deixar fail-loud → manual nas sessões de checklist trimestral.
+**Cobertura:** CoinMarketCap **não** tem MVRV. Glassnode tem — fora das fontes preferenciais, mas o firecrawl pode tentar buscar livremente. Alternativa: deixar fail-loud → manual nas sessões de checklist trimestral.
 
 ### 🟢 4.2 NVT Ratio (Network Value to Transactions)
 **Problema:** análogo a P/E para cripto — mede se valor da rede está esticado vs. uso real (volume de transações).
 
 **Proposta:** adicionar como sub-fator informativo em [D] Solidez da Tese. NVT alto persistente = bolha; NVT baixo persistente = subavaliado.
 
-**Cobertura:** CoinMarketCap não traz. Fail-loud → manual ou desistir do fator.
+**Cobertura:** CoinMarketCap não traz. O firecrawl pode tentar busca livre (ex: sites especializados em on-chain); se não achar, fail-loud → manual ou desistir do fator.
 
 ### 🟢 4.3 % do supply em exchanges
 **Problema:** indicador de pressão vendedora. Quando % do BTC em exchanges sobe, sinaliza que holders estão movendo para vender. Quando cai, sinaliza acumulação (custodiar self).
 
 **Proposta:** adicionar como flag informativa, não fator de peso.
 
-**Cobertura:** Glassnode/CryptoQuant — fora da whitelist.
+**Cobertura:** Glassnode/CryptoQuant — fora das fontes preferenciais; o firecrawl pode tentar busca livre nesses sites antes do fail-loud.
 
 ### 🟡 4.4 Distinção entre cripto store-of-value (BTC) e produtiva (ETH, SOL)
 **Problema:** o sistema trata BTC e ETH com a mesma régua. BTC se valida por escassez (stock-to-flow); ETH/SOL se validam por adoção da camada de aplicação (TVL DeFi, volume de DEX, gas burned).
@@ -168,7 +168,7 @@ O sistema já tem "Retorno Real Líquido Ajustado" mas a justificativa muitas ve
 - **Cripto SoV (BTC):** peso maior em [B] Descorrelação e [C] Drawdown, menor em [D] Tese (BTC é tese estabelecida)
 - **Cripto produtiva (ETH, SOL, etc.):** peso maior em [D] (TVL, devs ativos, gas) e [E] (2º Nível)
 
-**Custo:** documentar — sem dado novo para BTC. Para ETH/SOL: TVL via DefiLlama (fora da whitelist) → fail-loud manual.
+**Custo:** documentar — sem dado novo para BTC. Para ETH/SOL: TVL via DefiLlama (fora das fontes preferenciais) → firecrawl tenta busca livre, senão fail-loud manual.
 
 ---
 
@@ -179,7 +179,7 @@ O sistema já tem "Retorno Real Líquido Ajustado" mas a justificativa muitas ve
 
 **Proposta:** adicionar Seção 5.5 ao relatório HTML: matriz de correlação 30d (retornos diários) entre os ativos da carteira. Yahoo Finance tem séries históricas. Sinalizar pares com correlação >0,8 como "concentração disfarçada".
 
-**Custo:** Yahoo Finance tem dados — script precisa calcular. Médio.
+**Custo:** Yahoo Finance tem dados — a coleta via firecrawl precisa buscar as séries e o cálculo é feito depois. Médio.
 
 ### 🟢 5.2 Concentração SETORIAL (não só ARCA)
 **Problema:** ARCA mede 4 classes. Mas dentro de Ações, pode estar 70% em commodities (PETR4, VALE3, PRIO3) — concentração setorial enorme não capturada.
@@ -264,5 +264,5 @@ Os outros (EV/EBITDA, FCF Yield, MVRV, correlação, Kelly) ficam para uma v2.2.
 1. Usuário lê este documento
 2. Marca quais propostas adotar (1–5 prioritárias + opcionais)
 3. Pedir nova sessão de customização do plugin: "Adota 5.4, 5.6 e 2.1 do `melhorias-profissionais.md`"
-4. Sistema atualiza `sistema-score-v7.md` e `coletar_dados.py` conforme escolha
+4. Sistema atualiza `sistema-score-v7.md` e as instruções de coleta via firecrawl em `SKILL.md`/`fontes-dados.md` conforme escolha
 5. Versão sobe para v2.2
