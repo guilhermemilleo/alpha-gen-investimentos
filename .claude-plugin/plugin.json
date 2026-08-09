@@ -1,7 +1,7 @@
 {
   "name": "alpha-gen-investimentos",
-  "version": "2.1.0",
-  "description": "Analista e consultor de investimentos pessoal — framework Alpha-Gen (Howard Marks / ARCA) com coleta em batch.",
+  "version": "3.0.0",
+  "description": "Analista e consultor de investimentos pessoal — framework Alpha-Gen (Howard Marks / ARCA) com coleta de dados via Firecrawl (Investidor10, CoinMarketCap, BCB, Yahoo Finance).",
   "author": { "name": "Guilherme" },
-  "keywords": ["investimentos", "alpha-gen", "arca", "howard-marks", "fiis", "acoes", "renda-fixa", "cripto"]
+  "keywords": ["investimentos", "alpha-gen", "arca", "howard-marks", "fiis", "acoes", "renda-fixa", "cripto", "firecrawl"]
 }
