@@ -79,7 +79,7 @@ Gate de DY para FIIs: se novo FII tiver DY mais de 3pp abaixo de FII da mesma su
 ### O QUE É
 Identificar oportunidades fora da Carteira Finclass, dentro de um universo de ativos **fornecido pelo usuário via planilha Excel**. Pelo menos uma tese deve ser genuinamente non-consensus.
 
-> Na v2.1 o Cenário C deixou de "varrer o mercado" e passou a operar **somente sobre os tickers que o usuário decide submeter**. Isso elimina recomendações arbitrárias e mantém o sistema 100% dentro da whitelist das 4 fontes.
+> O Cenário C não "varre o mercado": ele opera **somente sobre os tickers que o usuário decide submeter**. Isso elimina recomendações arbitrárias e mantém o universo sob controle do usuário, mesmo com o firecrawl podendo buscar livremente os dados de cada ticker.
 
 ### REGRA C-0: Pergunta Obrigatória de Abertura (NOVA — v2.1)
 
@@ -93,7 +93,7 @@ Comportamento conforme resposta:
 
 | Resposta | Comportamento |
 |----------|---------------|
-| Anexa Excel agora | Ler tickers, coletar dados via `coletar_dados.py`, executar Cenário C |
+| Anexa Excel agora | Ler tickers, coletar dados via firecrawl (Investidor10/CoinMarketCap conforme classe), executar Cenário C |
 | Não / agora não / pular | **Não gerar Cenário C.** Relatório final terá apenas Cenários A e B. Declarar no Veredito: "Cenário C não foi gerado nesta sessão — usuário optou por não submeter universo livre." |
 | Resposta ambígua | Repetir a pergunta uma vez. Se ainda ambíguo: tratar como "Não". |
 
@@ -130,7 +130,7 @@ Se nenhum ativo do universo trazido passar no Teste de Segundo Nível: **declara
 
 ### REGRA C-4: Filtro de liquidez obrigatório (mantida)
 Para cada ativo recomendado no Cenário C:
-- Verificar volume médio diário negociado (Status Invest para ações/FIIs; CoinMarketCap para cripto)
+- Verificar volume médio diário negociado (Investidor10 para ações/FIIs; CoinMarketCap para cripto — ambos via firecrawl)
 - Volume ≥ 10× o valor do aporte alocado naquele ativo
 - Declarar o volume na tabela antes de incluir
 - Se o script não conseguir o volume: **aplicar fail-loud** (perguntar ao usuário). Não excluir silenciosamente.
@@ -144,18 +144,18 @@ Todas as métricas obrigatórias se aplicam:
 - Preço Alvo + Stop Loss
 - Score Ajustado Final (usando a classe ARCA mais adequada)
 
-### REGRA C-6: Cobertura pelas 4 fontes
-Se algum ticker da planilha não for coberto pelas 4 fontes da whitelist (ex: ação americana sem BDR, ETF estrangeiro, ouro físico):
-1. Declarar explicitamente no relatório: "Ticker X não coberto pelas 4 fontes da whitelist v2.0."
+### REGRA C-6: Cobertura via Firecrawl
+Se algum ticker da planilha não for encontrado nem na fonte preferencial (Investidor10/CoinMarketCap) nem na busca livre do firecrawl (ex: ação americana sem BDR, ETF estrangeiro, ouro físico):
+1. Declarar explicitamente no relatório: "Ticker X não coberto pelas fontes disponíveis via firecrawl."
 2. Pedir ao usuário os dados manualmente (regra fail-loud), OU
 3. Excluir do Cenário C declarando o motivo no Veredito.
 
-Nunca buscar em outras fontes para preencher o gap.
+A busca livre do firecrawl já foi tentada antes de chegar a este ponto — não há uma "próxima fonte" a tentar além dela.
 
 ### COMO SELECIONAR ATIVOS NO CENÁRIO C
 1. Confirmar com o usuário se quer anexar a planilha (REGRA C-0)
 2. Se sim: ler a planilha → extrair tickers → confirmar parsing com o usuário se houver ambiguidade
-3. Coletar dados via `coletar_dados.py --ativos ... --cripto ...` (split por classe)
+3. Coletar dados via firecrawl (Investidor10 para ações/FIIs, CoinMarketCap para cripto — split por classe)
 4. Para campos `_missing`: aplicar fail-loud (perguntar ao usuário)
 5. Calcular Score Ajustado Final de cada candidato
 6. Filtrar por liquidez (regra C-4)
