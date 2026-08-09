@@ -2,9 +2,6 @@
 historico/cache_dados/
 *.cache
 *.tmp
-__pycache__/
-*.pyc
-.pytest_cache/
 
 # Environment
 .env
