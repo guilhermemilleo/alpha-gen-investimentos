@@ -1,37 +1,49 @@
-# Fontes de Dados — Alpha-Gen (v2.0 — Whitelist Estrita)
+# Fontes de Dados — Alpha-Gen (v3.0 — Coleta via Firecrawl)
 
-> **Regra de ouro:** apenas as 4 fontes desta página podem ser consultadas. Qualquer dado que não estiver disponível nelas → **parar e perguntar ao usuário**. Não navegar em outros sites, não usar WebSearch, não improvisar.
-
----
-
-## As 4 Fontes Permitidas
-
-| # | Fonte | Domínio único | Uso |
-|---|-------|---------------|-----|
-| 1 | **Status Invest** | `statusinvest.com.br` | Ações e FIIs brasileiros (todos os dados) |
-| 2 | **CoinMarketCap** | `coinmarketcap.com` | Criptomoedas (todos os dados) |
-| 3 | **Banco Central do Brasil** | `bcb.gov.br` (API SGS/Olinda) | Macro Brasil (Selic, IPCA, Focus, USD/BRL) |
-| 4 | **Yahoo Finance** | `finance.yahoo.com` (via lib `yfinance`) | Macro EUA/internacional (Treasuries, VIX, WTI, Brent, ouro, DXY) |
-
-**Importante:** as 4 são acessadas pelo script `scripts/coletar_dados.py` em batch. NÃO buscar diretamente via web_fetch a menos que o script falhe — e ainda assim apenas as URLs exatas mapeadas nesta página.
+> **Regra de ouro:** toda coleta de dados passa pela skill `firecrawl`. Nunca usar `WebSearch` nativo do Claude, nunca fazer scraping manual fora do firecrawl.
 
 ---
 
-## Mapa Campo → Fonte → URL Exata
+## Ordem de Tentativas (obrigatória para todo dado)
 
-### Macro Brasil — bcb.gov.br (API SGS, retorna JSON)
+| Ordem | Ação |
+|---|---|
+| 1ª | Buscar/raspar a **fonte preferencial** (tabela abaixo) via firecrawl |
+| 2ª | Se não encontrar: firecrawl faz **busca livre** na internet |
+| 3ª | Se ainda assim não encontrar: **perguntar ao usuário** (fail-loud) |
 
-| Campo | Endpoint |
-|-------|----------|
-| Selic meta (atual) | `https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json` |
-| IPCA mensal (últimos 12) | `https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/12?formato=json` |
-| USD/BRL PTAX venda | `https://api.bcb.gov.br/dados/serie/bcdata.sgs.1/dados/ultimos/1?formato=json` |
-| Relatório Focus (medianas anuais) | `https://olinda.bcb.gov.br/olinda/servico/Expectativas/versao/v1/odata/ExpectativasMercadoAnuais?$top=20&$orderby=Data%20desc&$format=json` |
+Nunca pular a 1ª tentativa. Nunca perguntar ao usuário sem esgotar as duas primeiras.
 
-### Macro Internacional — Yahoo Finance (via lib `yfinance`)
+---
 
-| Campo | Ticker yfinance |
-|-------|-----------------|
+## Fontes Preferenciais por Tipo de Dado
+
+| # | Tipo | Fonte preferencial | Domínio |
+|---|------|---------------------|---------|
+| 1 | Ações e FIIs brasileiros | Investidor10 | `investidor10.com.br` |
+| 2 | Criptomoedas | CoinMarketCap | `coinmarketcap.com` |
+| 3 | Macro Brasil (Selic, IPCA, Focus, USD/BRL) | Banco Central do Brasil | `bcb.gov.br` |
+| 4 | Macro internacional (Treasuries, VIX, WTI, Brent, ouro, DXY) | Yahoo Finance | `finance.yahoo.com` |
+
+Se a fonte preferencial não tiver o dado (página não traz o campo, ativo não listado, etc.), o firecrawl tenta busca livre na internet antes de qualquer pergunta ao usuário.
+
+---
+
+## Mapa Campo → Fonte Preferencial
+
+### Macro Brasil — bcb.gov.br
+
+| Campo | Onde buscar |
+|-------|-------------|
+| Selic meta (atual) | Série SGS 432 (API BCB) |
+| IPCA mensal (últimos 12) | Série SGS 433 (API BCB) |
+| USD/BRL PTAX venda | Série SGS 1 (API BCB) |
+| Relatório Focus (medianas anuais: IPCA, PIB, Selic) | Olinda — Expectativas de Mercado Anuais (API BCB) |
+
+### Macro Internacional — finance.yahoo.com
+
+| Campo | Ticker Yahoo Finance |
+|-------|-----------------------|
 | Treasury 10Y EUA | `^TNX` |
 | VIX | `^VIX` |
 | WTI Crude Oil | `CL=F` |
@@ -40,67 +52,44 @@
 | DXY (Dollar Index) | `DX-Y.NYB` |
 | USD/BRL (cross-check) | `USDBRL=X` |
 
-### Ações Brasileiras — Status Invest
+### Ações Brasileiras — Investidor10
 
-URL única: `https://statusinvest.com.br/acoes/[ticker-em-minusculas]`
+URL padrão: `https://investidor10.com.br/acoes/[ticker-em-minusculas]/`
 
-Campos extraídos: Preço atual, P/L, P/VP, Dividend Yield, ROE, ROIC, Dív. líquida/EBITDA, M. Líquida, LPA, VPA, Liquidez média diária.
+Campos: Preço atual, P/L, P/VP, Dividend Yield, ROE, ROIC, Dív. líquida/EBITDA, Margem Líquida, LPA, VPA, Liquidez média diária.
 
-### FIIs — Status Invest
+### FIIs — Investidor10
 
-URL única: `https://statusinvest.com.br/fundos-imobiliarios/[ticker-em-minusculas]`
+URL padrão: `https://investidor10.com.br/fiis/[ticker-em-minusculas]/`
 
-Campos extraídos: Preço atual, P/VP, Dividend Yield, Últ. Rendimento, Vacância, Liq. méd. diária, Val. patrim. p/cota, Nº de Cotistas.
+Campos: Preço atual, P/VP, Dividend Yield, Últ. Rendimento, Vacância, Liq. méd. diária, Val. patrim. p/cota, Nº de Cotistas.
 
-**Limitação conhecida do Status Invest para FIIs:** não traz WAULT, cap rate detalhado, rating de CRIs, concentração de inquilino, indexação dos CRIs. Esses sub-fatores ficam sob a regra de **dado indisponível**: o script marca em `_missing`, a skill pergunta ao usuário (ou aceita marcar como indisponível → nota 5 + flag ⚠️, conforme `sistema-score-v7.md` Seção 02-R).
+**Limitação conhecida:** o Investidor10 não traz de forma padronizada WAULT, cap rate detalhado, rating de CRIs, concentração de inquilino, indexação dos CRIs. Para esses campos: tentar busca livre via firecrawl (ex: relatório gerencial do fundo) antes do fail-loud.
 
 ### Criptomoedas — CoinMarketCap
 
-URL única: `https://coinmarketcap.com/currencies/[slug]/` (ex: `bitcoin`, `ethereum`, `solana`)
+URL padrão: `https://coinmarketcap.com/currencies/[slug]/` (ex: `bitcoin`, `ethereum`, `solana`)
 
-Campos extraídos: Preço USD, variação 24h/7d/30d, Market Cap, Volume 24h, ATH, Fear & Greed Index.
-
----
-
-## Regras de Comportamento da Coleta
-
-### O QUE FAZER
-
-1. Sempre chamar `scripts/coletar_dados.py` PRIMEIRO. Ele cuida das 4 fontes em batch e devolve JSON estruturado.
-2. Cache de 24h ativo por padrão (`historico/cache_dados/`). Dado fresco não refaz request.
-3. Se um campo voltar `null` no JSON, ele estará listado no array `_missing` — tratar conforme regra de dado indisponível.
-
-### O QUE NÃO FAZER
-
-- ❌ **PROIBIDO** usar `WebSearch` em qualquer etapa de coleta de dados.
-- ❌ **PROIBIDO** consultar Fundamentus, Investidor10, Investing.com, BTG, XP, TradingView, Suno, Empiricus, Reuters, Bloomberg, ou qualquer outro site não listado nesta página.
-- ❌ **PROIBIDO** "tentar uma fonte alternativa" se a fonte primária falhar. A regra é binária: a fonte mapeada acima ou nada.
-- ❌ **PROIBIDO** estimar valores faltantes ("aproximadamente 12%", "média do setor", "vou usar valor de referência").
-- ❌ **PROIBIDO** chamar `web_fetch` para domínios fora da whitelist.
-
-### Quando um Campo Está Faltante (regra única — REFORÇADA v2.1)
-
-🚨 **Default na v2.1: pedir manualmente é OBRIGATÓRIO.** Marcar como indisponível só vale se o usuário pedir explicitamente após ser perguntado.
-
-1. O script já tentou nas fontes desta página. Falhou.
-2. **Perguntar ao usuário** explicitamente, exatamente neste formato:
-
-   > "🔍 Dado faltante: não encontrei [CAMPO] de [TICKER/INDICADOR] no [FONTE]. Pode me informar o valor manualmente para eu prosseguir? (Se preferir marcar como indisponível, me avise — anoto nota 5 + ⚠️ para o fator afetado.)"
-
-3. **Aguardar resposta antes de continuar.** Nunca improvisar, nunca buscar em outra fonte, nunca chutar.
-4. **Registrar a falha em `historico/_missing_data_log.md`** (formato em `skills/analise-aporte/SKILL.md`). Isso permite identificar campos que falham repetidamente e melhorar o plugin no futuro.
-
-### Cache
-
-- TTL padrão: 24h
-- Localização: `historico/cache_dados/`
-- Para forçar refresh: passar flag `--sem-cache` ao script
-- Macro: refresh recomendado a cada análise (mas cache de 24h aceito)
-- Ativos: cache de 24h aceito (preço pode variar intra-dia, mas fundamentais não mudam)
+Campos: Preço USD, variação 24h/7d/30d, Market Cap, Volume 24h, ATH, Fear & Greed Index.
 
 ---
 
-## Dados que NÃO precisam de busca em tempo real
+## Quando um Campo Está Faltante (fail-loud — regra rígida)
+
+🚨 **Pedir manualmente é OBRIGATÓRIO, não opcional.** Marcar como indisponível só é aceito se o usuário **explicitamente** disser "marca como indisponível" depois de ser perguntado.
+
+1. Tentativa 1 (fonte preferencial via firecrawl): falhou.
+2. Tentativa 2 (busca livre via firecrawl): falhou.
+3. **Perguntar ao usuário**, exatamente neste formato:
+
+   > "🔍 Dado faltante: não encontrei [CAMPO] de [TICKER/INDICADOR] nem na fonte preferencial nem em busca livre via firecrawl. Pode me informar o valor manualmente para eu prosseguir? (Se preferir marcar como indisponível, me avise — anoto nota 5 + ⚠️ para o fator afetado.)"
+
+4. **Aguardar resposta antes de continuar.** Nunca improvisar, nunca chutar.
+5. **Registrar a falha em `historico/_missing_data_log.md`**, incluindo em qual tentativa o dado faltou (formato em `skills/analise-aporte/SKILL.md`).
+
+---
+
+## Dados que NÃO Precisam de Busca em Tempo Real
 
 - Pesos ARCA (25% cada — definido no sistema)
 - Fórmulas de score (`sistema-score-v7.md`)
