@@ -1,81 +1,44 @@
-# Alpha-Gen Investimentos — v2.1
+# Alpha-Gen Investimentos — v3.0
 
 Plugin de análise e consultoria de investimentos pessoal baseado no framework Alpha-Gen v7.0, filosofia Howard Marks / Oaktree Capital.
 
-**Novidade da v2.0:** coleta de dados em batch via script Python (4 fontes estritas, cache 24h, fail-loud). Reduz drasticamente o consumo de tokens em relação à v1.0 (que fazia busca livre via WebSearch/web_fetch).
+**Novidade da v3.0:** o plugin passou a ter uma única skill — `analise-aporte` — e toda a coleta de dados é feita através da skill `firecrawl`, com Investidor10 (ações/FIIs) e CoinMarketCap (cripto) como fontes preferenciais, BCB e Yahoo Finance para dados macro, e busca livre do firecrawl como fallback antes de perguntar ao usuário. O script Python de scraping e o cache em disco da v2.x foram removidos.
 
-## Skills Disponíveis
+## Skill Disponível
 
 ### `/analise-aporte`
-Análise completa para decisão de aporte mensal. Coleta toda a base de dados via `scripts/coletar_dados.py` no início e gera relatório HTML em `historico/`.
+Análise completa para decisão de aporte mensal — inclui também a atualização do Checklist de Ciclo (multiplicadores de convicção ARCA), que antes era uma skill separada.
 
-**Uso:** Informe o valor disponível para aporte + envie os arquivos "Minha Carteira" e "Carteira Finclass".
-
-### `/analise-rapida`
-Análise pontual de um ativo ou pergunta específica. Usa o mesmo script (com cache compartilhado).
-
-**Uso:** Faça a pergunta diretamente. Ex: "Vale aumentar posição em PRIO3?" ou "Qual o score atual de TRXF11?"
-
-### `/atualizar-ciclo`
-Atualiza o Checklist de Ciclo (multiplicadores ARCA). Coleta dados macro via `--macro` no script.
-
-**Uso:** Execute periodicamente (recomendado: a cada 3 meses ou após evento macro relevante).
+**Uso:** Informe o valor disponível para aporte + envie os arquivos "Minha Carteira" e "Carteira Finclass". Também pode ser acionada só para revisar os multiplicadores de ciclo, dizendo por exemplo "atualizar ciclo" ou "revisar multiplicadores".
 
 ---
 
 ## Arquitetura de Coleta de Dados
 
-### As 4 Fontes Estritas (whitelist)
+### Pré-requisito: skill `firecrawl`
 
-| Tipo | Fonte única |
+A skill `analise-aporte` depende da skill `firecrawl` para toda a coleta de dados. Antes de qualquer busca, ela verifica se o `firecrawl` está instalado no ambiente; se não estiver, para a execução e instrui a instalação antes de continuar.
+
+### Fontes Preferenciais
+
+| Tipo | Fonte preferencial |
 |---|---|
-| Macro Brasil (Selic, IPCA, Focus, USD/BRL) | `bcb.gov.br` (API SGS/Olinda) |
-| Macro internacional (Treasuries, VIX, WTI, Brent, ouro, DXY) | `finance.yahoo.com` (via `yfinance`) |
-| Ações + FIIs brasileiros | `statusinvest.com.br` |
+| Ações e FIIs brasileiros | `investidor10.com.br` |
 | Criptomoedas | `coinmarketcap.com` |
+| Macro Brasil (Selic, IPCA, Focus, USD/BRL) | `bcb.gov.br` |
+| Macro internacional (Treasuries, VIX, WTI, Brent, ouro, DXY) | `finance.yahoo.com` |
 
-**Nenhuma outra fonte é consultada.** Sem WebSearch, sem Fundamentus, sem Investidor10, sem BTG/XP, sem Investing.com. Detalhes em `skills/analise-aporte/references/fontes-dados.md`.
+### Ordem de Tentativas por Dado
 
-### Script de Coleta
+1. Buscar/raspar a fonte preferencial via firecrawl
+2. Se não encontrar: firecrawl faz busca livre na internet
+3. Se ainda assim não encontrar: perguntar ao usuário (fail-loud)
 
-`skills/analise-aporte/scripts/coletar_dados.py` — comando único, três modos:
+Detalhes em `skills/analise-aporte/references/fontes-dados.md`.
 
-```bash
-# Macro completo (BCB + Yahoo Finance)
-python skills/analise-aporte/scripts/coletar_dados.py --macro
+### Fail-Loud (regra rígida, mantida da v2.x)
 
-# Ações e FIIs em batch
-python skills/analise-aporte/scripts/coletar_dados.py --ativos PETR4,HGLG11,VALE3
-
-# Criptomoedas
-python skills/analise-aporte/scripts/coletar_dados.py --cripto BTC,ETH,SOL
-
-# Combinado
-python skills/analise-aporte/scripts/coletar_dados.py --macro --ativos PETR4,HGLG11 --cripto BTC
-
-# Forçar refresh (ignora cache)
-python skills/analise-aporte/scripts/coletar_dados.py --macro --sem-cache
-```
-
-Saída: JSON estruturado em stdout. Logs em stderr.
-
-### Cache
-
-- TTL: 24h
-- Localização: `historico/cache_dados/`
-- Compartilhado entre as 3 skills — mesma sessão não refaz request
-
-### Fail-Loud (regra rígida)
-
-Se o script não conseguir um dado nas 4 fontes, o campo volta `null` e aparece em `_missing` no JSON. A skill **PERGUNTA AO USUÁRIO** o valor manualmente, ou aceita marcar como indisponível (nota 5 + flag ⚠️ na regra do sistema). **Nunca improvisa, nunca busca em outras fontes.**
-
-### Instalação das Dependências
-
-```bash
-pip install --break-system-packages -r skills/analise-aporte/scripts/requirements.txt
-```
-
-Dependências mínimas: `requests`, `beautifulsoup4`, `lxml`, `yfinance`.
+Se nem a fonte preferencial nem a busca livre do firecrawl encontrarem um dado, a skill **PERGUNTA AO USUÁRIO** o valor manualmente, ou aceita marcar como indisponível (nota 5 + flag ⚠️ na regra do sistema). **Nunca estima, nunca chuta.**
 
 ---
 
@@ -84,25 +47,17 @@ Dependências mínimas: `requests`, `beautifulsoup4`, `lxml`, `yfinance`.
 ```
 alpha-gen-investimentos/
 ├── skills/
-│   ├── analise-aporte/            # Skill principal de aporte mensal
-│   │   ├── SKILL.md
-│   │   ├── scripts/
-│   │   │   ├── coletar_dados.py   # Script único de coleta em batch
-│   │   │   └── requirements.txt
-│   │   └── references/
-│   │       ├── fontes-dados.md             # Whitelist estrita das 4 fontes
-│   │       ├── sistema-score-v7.md
-│   │       ├── regras-cenarios.md
-│   │       ├── html-output.md
-│   │       └── melhorias-profissionais.md  # NOVO v2.1 — gaps + propostas
-│   ├── analise-rapida/            # Skill de consulta pontual
-│   │   └── SKILL.md
-│   └── atualizar-ciclo/           # Skill de atualização do checklist macro
-│       └── SKILL.md
-├── historico/                     # Relatórios + cache de dados
+│   └── analise-aporte/            # Única skill do plugin
+│       ├── SKILL.md
+│       └── references/
+│           ├── fontes-dados.md             # Fontes preferenciais + regra de fallback via firecrawl
+│           ├── sistema-score-v7.md
+│           ├── regras-cenarios.md
+│           ├── html-output.md
+│           └── melhorias-profissionais.md  # Gaps + propostas para revisão do usuário
+├── historico/                     # Relatórios gerados
 │   ├── AlphaGen_YYYY-MM-DD.html
-│   ├── checklist-ciclo.md
-│   └── cache_dados/
+│   └── checklist-ciclo.md
 └── README.md
 ```
 
@@ -115,20 +70,24 @@ alpha-gen-investimentos/
 
 ## Changelog
 
-### v2.1 (esta versão)
-- **Cenário C reformulado:** universo agora vem de planilha Excel anexada pelo usuário, não mais "varredura das 4 fontes". Pergunta obrigatória de abertura: anexa Excel ou pula Cenário C
-- **Fail-loud reforçado:** pedir dado manualmente virou DEFAULT obrigatório. Marcar como indisponível só com confirmação explícita do usuário
-- **Log persistente de dados faltantes** (`historico/_missing_data_log.md`): registra todo gap por sessão para identificar padrões estruturais de falha das fontes
-- **Nova referência `melhorias-profissionais.md`:** análise de gaps no score atual frente ao que sell-side, gestoras de FIIs e research de cripto usam, com 25+ propostas categorizadas por prioridade e custo
-- Inconsistências removidas: referências a Investidor10/BTG/XP no Cenário C foram eliminadas (haviam sobrado da v1.0)
+### v3.0 (esta versão)
+- **Skill única:** `analise-rapida` e `atualizar-ciclo` foram removidas; a lógica de checklist de ciclo foi absorvida como etapa interna de `analise-aporte`
+- **Coleta via Firecrawl:** o script Python `coletar_dados.py` e o cache em disco de 24h foram removidos. Toda coleta agora é feita pela skill `firecrawl`
+- **Fontes preferenciais atualizadas:** Investidor10 substitui Status Invest para ações/FIIs; CoinMarketCap continua para cripto; BCB e Yahoo Finance continuam para macro
+- **Fallback de busca livre:** se a fonte preferencial não tiver o dado, o firecrawl busca livremente na internet antes de perguntar ao usuário (fail-loud continua sendo o último recurso)
+- **Gate de instalação:** a skill verifica se o `firecrawl` está disponível antes de iniciar qualquer coleta e instrui a instalação caso não esteja
+
+### v2.1
+- Cenário C reformulado: universo vindo de planilha Excel anexada pelo usuário
+- Fail-loud reforçado: pedir dado manualmente virou default obrigatório
+- Log persistente de dados faltantes (`historico/_missing_data_log.md`)
+- Nova referência `melhorias-profissionais.md`
 
 ### v2.0
 - Coleta de dados via script Python em batch (consumo de tokens drasticamente menor)
 - Whitelist estrita de 4 fontes (BCB, Yahoo Finance, Status Invest, CoinMarketCap)
 - Cache 24h em disco compartilhado entre skills
 - Fail-loud: campos faltantes geram pergunta ao usuário, sem improviso
-- Cenário C ajustado: universo restrito ao que as 4 fontes cobrem
-- WebSearch e fontes alternativas explicitamente proibidas
 
 ### v1.0
 - Versão inicial com framework Alpha-Gen v7.0
