@@ -201,7 +201,7 @@ Premissas: Ações 18% a.a. | FIIs 12% a.a. | RF/Caixa 13% a.a. | Alternativos 2
 
 ## Seção 11 — Checklist de Ciclo
 
-Gerar quando `historico/checklist-ciclo.md` não existir. Salvar após geração.
+Gerar quando `./historico/checklist-ciclo.md` (pasta atual) não existir. Salvar após geração.
 
 **Indicadores por classe:**
 - Ações: P/L médio Ibovespa vs. histórico 10a (barato <10x, caro >18x); fluxo estrangeiro B3 (30d); volume IPOs

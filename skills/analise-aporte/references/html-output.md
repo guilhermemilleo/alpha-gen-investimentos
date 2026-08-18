@@ -309,7 +309,7 @@ Se novo Checklist foi gerado, exibir box de salvamento no final:
 <div class="alert" style="margin-top:24px;font-size:13px;border-color:var(--accent);">
   💾 <strong>AÇÃO — Salvar Checklist de Ciclo:</strong><br>
   Checklist gerado nesta sessão. Para ancorar os multiplicadores na próxima análise,
-  o arquivo foi salvo automaticamente em <code>historico/checklist-ciclo.md</code>.
+  o arquivo foi salvo automaticamente em <code>./historico/checklist-ciclo.md</code>.
 </div>
 ```
 

@@ -85,7 +85,7 @@ Campos: Preço USD, variação 24h/7d/30d, Market Cap, Volume 24h, ATH, Fear & G
    > "🔍 Dado faltante: não encontrei [CAMPO] de [TICKER/INDICADOR] nem na fonte preferencial nem em busca livre via firecrawl. Pode me informar o valor manualmente para eu prosseguir? (Se preferir marcar como indisponível, me avise — anoto nota 5 + ⚠️ para o fator afetado.)"
 
 4. **Aguardar resposta antes de continuar.** Nunca improvisar, nunca chutar.
-5. **Registrar a falha em `historico/_missing_data_log.md`**, incluindo em qual tentativa o dado faltou (formato em `skills/analise-aporte/SKILL.md`).
+5. **Registrar a falha em `./historico/_missing_data_log.md`** (pasta atual), incluindo em qual tentativa o dado faltou (formato em `skills/analise-aporte/SKILL.md`).
 
 ---
 
@@ -93,5 +93,5 @@ Campos: Preço USD, variação 24h/7d/30d, Market Cap, Volume 24h, ATH, Fear & G
 
 - Pesos ARCA (25% cada — definido no sistema)
 - Fórmulas de score (`sistema-score-v7.md`)
-- Multiplicadores de ciclo (sempre lidos de `historico/checklist-ciclo.md`)
+- Multiplicadores de ciclo (sempre lidos de `./historico/checklist-ciclo.md`, na pasta atual)
 - Perfil do investidor (definido no README do plugin)

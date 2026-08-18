@@ -75,7 +75,7 @@ Sequência rígida:
 
 ### Log de Dados Faltantes
 
-Para cada sessão, manter um log persistente em `historico/_missing_data_log.md` com formato:
+Para cada sessão, manter um log persistente em `./historico/_missing_data_log.md` (pasta atual) com formato:
 
 ```markdown
 ## Sessão YYYY-MM-DD HH:MM
@@ -93,16 +93,30 @@ Anexar o log ao relatório HTML como Seção 4.5 (Diagnóstico de Coleta) quando
 
 ---
 
+## ETAPA 0.5 — Localização Automática das Carteiras (pasta atual)
+
+Antes de pedir qualquer arquivo ao usuário, buscar automaticamente na pasta onde o Claude está sendo executado (diretório de trabalho atual):
+
+1. Listar arquivos `.xlsx`, `.xls` e `.csv` na pasta atual (não recursivo).
+2. Classificar cada arquivo pelo nome (case-insensitive):
+   - Contém "finclass" → candidato a **Carteira Finclass**
+   - Contém "cenario"/"cenário" + "c" → candidato a **universo do Cenário C**
+   - Contém "carteira" e não se encaixa nos casos acima → candidato a **Minha Carteira**
+3. Para cada tipo (Minha Carteira, Carteira Finclass):
+   - **Exatamente 1 candidato:** usar direto e informar ao usuário qual arquivo foi identificado (ex: "Usando `minha-carteira.xlsx` como Minha Carteira.").
+   - **0 candidatos ou 2+ candidatos ambíguos:** listar os arquivos encontrados na pasta atual e perguntar ao usuário qual usar para aquele tipo, ou se prefere anexar manualmente.
+4. O candidato ao **Cenário C** só é buscado se o usuário já confirmou (na pergunta obrigatória da Etapa 5) que quer gerar esse cenário; a mesma lógica de match único/ambíguo/ausente se aplica.
+
 ## Dados Necessários Antes de Iniciar
 
 Confirme que possui:
 1. **Valor do aporte** — perguntar se não informado
-2. **Minha Carteira** — arquivo Excel ou tabela (ativos, % na carteira, preço médio, patrimônio total)
-3. **Carteira Finclass** — arquivo Excel ou tabela (ativos recomendados, % alvo, preço teto, classe)
-4. Verificar `historico/` por arquivo `AlphaGen_*.html` mais recente (histórico da sessão anterior)
-5. Verificar `historico/checklist-ciclo.md` (âncora dos multiplicadores)
+2. **Minha Carteira** — via Etapa 0.5 (ativos, % na carteira, preço médio, patrimônio total)
+3. **Carteira Finclass** — via Etapa 0.5 (ativos recomendados, % alvo, preço teto, classe)
+4. Verificar `./historico/` (pasta atual) por arquivo `AlphaGen_*.html` mais recente (histórico da sessão anterior)
+5. Verificar `./historico/checklist-ciclo.md` (âncora dos multiplicadores)
 
-Se carteira ou Finclass não forem enviados, solicite antes de continuar.
+Se a Etapa 0.5 não resolver Minha Carteira ou Finclass automaticamente nem via pergunta ao usuário, solicite o anexo manual antes de continuar.
 
 ---
 
@@ -121,7 +135,7 @@ Se algum campo essencial (Selic, IPCA, VIX, Treasury) não for encontrado nem na
 
 **Passo 2.1 — Ler Checklist Anterior**
 
-Verificar `historico/checklist-ciclo.md`:
+Verificar `./historico/checklist-ciclo.md` (pasta atual):
 - **SE EXISTE:** ler multiplicadores anteriores e a data da última atualização
 - **SE NÃO EXISTE:** informar ao usuário que será criado o primeiro checklist
 
@@ -155,7 +169,7 @@ Para cada classe, definir o Multiplicador seguindo a escala:
 
 **Passo 2.5 — Gerar e Salvar Checklist**
 
-Gerar/atualizar `historico/checklist-ciclo.md` com o formato:
+Gerar/atualizar `./historico/checklist-ciclo.md` (pasta atual) com o formato:
 
 ```markdown
 # Checklist de Ciclo — Alpha-Gen
@@ -286,8 +300,8 @@ Prioridade 🔴 URGENTE | 🟢 EXECUTAR | 🟢 MANTER | 🟡 MONITORAR | 🔵 PR
 ### ETAPA 9 — Geração e Salvamento
 
 1. Gerar relatório HTML completo seguindo `references/html-output.md` (10 seções obrigatórias em ordem)
-2. Salvar como `historico/AlphaGen_[DATA].html` na pasta do plugin
-3. Se novo Checklist de Ciclo foi gerado ou atualizado: salvar em `historico/checklist-ciclo.md`
+2. Salvar como `./historico/AlphaGen_[DATA].html`, criando a pasta `historico/` na pasta atual (onde o Claude está sendo executado) se ainda não existir
+3. Se novo Checklist de Ciclo foi gerado ou atualizado: salvar em `./historico/checklist-ciclo.md`
 
 ---
 
