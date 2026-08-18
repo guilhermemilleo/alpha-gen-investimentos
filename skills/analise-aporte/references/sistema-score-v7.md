@@ -150,7 +150,6 @@ Fonte de verdade técnica. Contém todas as fórmulas, pesos e regras operaciona
 
 - **Prioridade ao que já existe:** aportar em ativos em carteira antes de buscar novos. Critério novo ativo: diferença de Score >0,5 OU tese comprometida por evento qualitativo
 - **Fallback RF:** se nenhum ativo RV/alts tiver Score >7,0 E Ratio >2:1 → Renda Fixa Tática
-- **Filtro de liquidez Cenário C:** volume médio diário ≥ 10× o valor do aporte no ativo
 - **Tetos de concentração:** inegociáveis (ver Seção 04)
 - **Sinalização de deterioração:** Score <6,0 → sinalizar para possível substituição
 
@@ -236,7 +235,7 @@ Ordem exata:
 5. **Diagnóstico Crítico** — desvio ARCA, gatilhos, stops, Ratio, margens negativas
 6. **Ranking Finclass** — 100% dos ativos; top 10 com breakdown completo
 7. **Tabelas dos 3 Cenários** — A, B, C com todas as colunas obrigatórias
-8. **Veredito Alpha-Gen** — cenário recomendado, ratings, filtros Marks, tese non-consensus
+8. **Veredito Alpha-Gen** — cenário recomendado, ratings, filtros Marks
 9. **Projeção de Meta** — meses por cenário, fórmula explícita, premissas
 10. **Protocolo de Execução** — todos os ativos em carteira com prioridade
 

@@ -271,7 +271,7 @@ Três tabelas separadas com header colorido:
 Declarar no header de cada tabela qual regra se aplica:
 - A: "Score Ajustado como árbitro absoluto. ARCA não considerado."
 - B: "Classes ARCA subrepresentadas priorizadas. Universo Finclass."
-- C: "Universo livre. Pelo menos 1 tese non-consensus obrigatória."
+- C: "Score Ajustado como árbitro absoluto. ARCA não considerado. Universo: Carteira C."
 
 ### Seção 8 — Veredito Alpha-Gen
 
@@ -279,7 +279,6 @@ Card com borda dourada. Incluir:
 - Cenário recomendado + justificativa
 - Rating de Convicção (1–10) com indicador visual
 - 4 Filtros de Marks com valores calculados (✅ ou ❌ + número)
-- Tese non-consensus (Cenário C)
 - "O que Marks faria?" — resposta direta
 
 ### Seção 9 — Projeção de Meta

@@ -102,10 +102,10 @@ Antes de pedir qualquer arquivo ao usuário, buscar automaticamente na pasta ond
    - Contém "finclass" → candidato a **Carteira Finclass**
    - Contém "cenario"/"cenário" + "c" → candidato a **universo do Cenário C**
    - Contém "carteira" e não se encaixa nos casos acima → candidato a **Minha Carteira**
-3. Para cada tipo (Minha Carteira, Carteira Finclass):
+3. Para cada tipo (Minha Carteira, Carteira Finclass, Carteira C):
    - **Exatamente 1 candidato:** usar direto e informar ao usuário qual arquivo foi identificado (ex: "Usando `minha-carteira.xlsx` como Minha Carteira.").
-   - **0 candidatos ou 2+ candidatos ambíguos:** listar os arquivos encontrados na pasta atual e perguntar ao usuário qual usar para aquele tipo, ou se prefere anexar manualmente.
-4. O candidato ao **Cenário C** só é buscado se o usuário já confirmou (na pergunta obrigatória da Etapa 5) que quer gerar esse cenário; a mesma lógica de match único/ambíguo/ausente se aplica.
+   - **0 candidatos:** para Minha Carteira e Carteira Finclass, solicitar anexo manual. Para Carteira C, perguntar uma vez se o usuário quer anexar um arquivo com os ativos para esse cenário; se não, seguir sem Cenário C (apenas A e B).
+   - **2+ candidatos ambíguos:** listar os arquivos encontrados na pasta atual e perguntar ao usuário qual usar para aquele tipo, ou se prefere anexar manualmente.
 
 ## Dados Necessários Antes de Iniciar
 
@@ -113,8 +113,9 @@ Confirme que possui:
 1. **Valor do aporte** — perguntar se não informado
 2. **Minha Carteira** — via Etapa 0.5 (ativos, % na carteira, preço médio, patrimônio total)
 3. **Carteira Finclass** — via Etapa 0.5 (ativos recomendados, % alvo, preço teto, classe)
-4. Verificar `./historico/` (pasta atual) por arquivo `AlphaGen_*.html` mais recente (histórico da sessão anterior)
-5. Verificar `./historico/checklist-ciclo.md` (âncora dos multiplicadores)
+4. **Carteira C** (opcional) — via Etapa 0.5 (ativos escolhidos pelo usuário para o Cenário C); se ausente e o usuário não quiser anexar, o relatório segue apenas com os Cenários A e B
+5. Verificar `./historico/` (pasta atual) por arquivo `AlphaGen_*.html` mais recente (histórico da sessão anterior)
+6. Verificar `./historico/checklist-ciclo.md` (âncora dos multiplicadores)
 
 Se a Etapa 0.5 não resolver Minha Carteira ou Finclass automaticamente nem via pergunta ao usuário, solicite o anexo manual antes de continuar.
 
@@ -255,24 +256,16 @@ Seguir RIGOROSAMENTE as regras comportamentais de `references/regras-cenarios.md
 - Se classe subrepresentada não tiver ativo Finclass com Score >7,0: próxima classe mais subrepresentada
 - Universo: apenas ativos Finclass (igual ao A, mas com filtro ARCA aplicado primeiro)
 
-**CENÁRIO C — Alpha-Gen Livre (universo trazido pelo usuário via Excel):**
+**CENÁRIO C — Carteira C Otimizada (universo escolhido pelo usuário):**
 
-🚨 **COMPORTAMENTO OBRIGATÓRIO:** Antes de gerar o Cenário C, parar a execução e perguntar literalmente:
+Se a Etapa 0.5 identificou um arquivo de Carteira C (candidato único), gerar o Cenário C diretamente — sem pergunta ritual. Se não encontrou nenhum candidato, perguntar uma vez se o usuário quer anexar um arquivo com os ativos para esse cenário:
 
-> "Quer anexar uma planilha Excel com os ativos para análise do Cenário C?
->  • **Sim** → me envia o arquivo (uma coluna com os tickers, ex: PRIO3, VALE3, BTC, KNCR11).
->  • **Não** → vou gerar o relatório apenas com os Cenários A e B."
+- **Usuário anexa o arquivo (ou já foi detectado na Etapa 0.5):** ler o arquivo (usar a skill `xlsx` ou `pandas`/`openpyxl` via Bash). Extrair coluna de tickers. Se ambíguo qual coluna usar → perguntar antes de coletar. Em seguida: dividir tickers por classe (ações/FIIs vs. cripto) e coletar via firecrawl (Investidor10/CoinMarketCap conforme classe). Aplicar todas as regras C-1 a C-6 de `references/regras-cenarios.md`.
+- **Usuário diz Não / agora não / pular:** **não gerar Cenário C**. Pular direto para ETAPA 6. No relatório, omitir a tabela do Cenário C e declarar no Veredito: "Cenário C não foi gerado nesta sessão — usuário optou por não submeter a Carteira C."
 
-Conforme a resposta:
-
-- **Usuário anexa Excel:** ler a planilha (usar a skill `xlsx` ou `pandas`/`openpyxl` via Bash). Extrair coluna de tickers. Se ambíguo qual coluna usar → perguntar antes de coletar. Em seguida: dividir tickers por classe (ações/FIIs vs. cripto) e coletar via firecrawl (Investidor10/CoinMarketCap conforme classe). Aplicar todas as regras C-1 a C-6 de `references/regras-cenarios.md`.
-- **Usuário diz Não / agora não / pular:** **não gerar Cenário C**. Pular direto para ETAPA 6. No relatório, omitir a tabela do Cenário C e declarar no Veredito: "Cenário C não foi gerado nesta sessão — usuário optou por não submeter universo livre."
-- **Resposta ambígua:** repetir a pergunta uma vez. Se ainda ambíguo → tratar como Não.
-
-Detalhes do Cenário C quando ativo:
-- Universo: união dos tickers da planilha do usuário (qualquer classe) + opcionalmente ativos da Carteira Finclass que o usuário marcar para entrar no C
-- Filtro de liquidez obrigatório: volume médio diário ≥ 10× o valor do aporte no ativo
-- Pelo menos 1 tese genuinamente non-consensus (nomear, identificar e justificar). Se nenhum ativo passar no Teste de Segundo Nível → declarar ausência no relatório, não inventar.
+Detalhes do Cenário C quando ativo (mesma lógica do Cenário A, universo diferente):
+- Universo: estritamente os tickers da Carteira C — sem mistura com a Carteira Finclass
+- Score Ajustado Final como árbitro único do ranking e da alocação — sem balanceamento ARCA
 - Tickers não encontrados nem na fonte preferencial nem em busca livre via firecrawl → aplicar fail-loud (perguntar manualmente) OU excluir declarando o motivo.
 
 ### ETAPA 6 — Veredito e Filtros de Howard Marks

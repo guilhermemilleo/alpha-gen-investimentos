@@ -74,40 +74,34 @@ Gate de DY para FIIs: se novo FII tiver DY mais de 3pp abaixo de FII da mesma su
 
 ---
 
-## CENÁRIO C — Alpha-Gen Livre (universo trazido pelo usuário)
+## CENÁRIO C — Carteira C Otimizada
 
 ### O QUE É
-Identificar oportunidades fora da Carteira Finclass, dentro de um universo de ativos **fornecido pelo usuário via planilha Excel**. Pelo menos uma tese deve ser genuinamente non-consensus.
+Identificar os melhores ativos do universo da Carteira C (ativos escolhidos pelo próprio usuário, fora da Carteira Finclass) para o aporte, usando apenas o Score Ajustado Final como critério de alocação — mesma lógica do Cenário A, trocando o universo de ativos.
 
-> O Cenário C não "varre o mercado": ele opera **somente sobre os tickers que o usuário decide submeter**. Isso elimina recomendações arbitrárias e mantém o universo sob controle do usuário, mesmo com o firecrawl podendo buscar livremente os dados de cada ticker.
+> O Cenário C não "varre o mercado": ele opera **somente sobre os tickers da Carteira C**. Isso elimina recomendações arbitrárias e mantém o universo sob controle do usuário, mesmo com o firecrawl podendo buscar livremente os dados de cada ticker.
 
-### REGRA C-0: Pergunta Obrigatória de Abertura (NOVA — v2.1)
+### REGRAS ABSOLUTAS (sem exceção)
 
-Antes de gerar o Cenário C, **o sistema PRECISA perguntar ao usuário**, com este texto literal:
+**REGRA C-1: Universo exclusivo**
+Apenas ativos presentes na Carteira C. Nenhum ativo externo, nenhuma mistura com a Carteira Finclass, mesmo que algum ativo Finclass tenha score mais alto.
 
-> "Quer anexar uma planilha Excel com os ativos para análise do Cenário C?
->  • **Sim** → me envia o arquivo (uma coluna com os tickers, ex: PRIO3, VALE3, BTC, KNCR11).
->  • **Não** → vou gerar o relatório apenas com os Cenários A e B."
+**REGRA C-2: Score Ajustado é o único árbitro**
+A alocação do aporte segue estritamente o ranking por Score Ajustado Final. Nenhum outro fator (tese non-consensus, liquidez mínima, balanceamento ARCA) define quanto vai para cada ativo.
 
-Comportamento conforme resposta:
+**REGRA C-3: PROIBIÇÃO ABSOLUTA de ARCA no Cenário C**
+- ❌ PROIBIDO verificar desvio de classe ARCA
+- ❌ PROIBIDO priorizar ativo por classe estar subrepresentada
+- ❌ PROIBIDO rejeitar ativo porque "já tem muito de uma classe"
+- ❌ PROIBIDO ajustar alocação para "balancear" o portfólio
+- ✅ CORRETO: se os 3 maiores scores forem todos FIIs, alocar nos 3 FIIs
 
-| Resposta | Comportamento |
-|----------|---------------|
-| Anexa Excel agora | Ler tickers, coletar dados via firecrawl (Investidor10/CoinMarketCap conforme classe), executar Cenário C |
-| Não / agora não / pular | **Não gerar Cenário C.** Relatório final terá apenas Cenários A e B. Declarar no Veredito: "Cenário C não foi gerado nesta sessão — usuário optou por não submeter universo livre." |
-| Resposta ambígua | Repetir a pergunta uma vez. Se ainda ambíguo: tratar como "Não". |
+**REGRA C-4: Verificação de carteira atual primeiro**
+Antes de sugerir ativos novos da Carteira C, verificar se aportar nos ativos de maior Score já em carteira não é superior. Critério para ativo novo entrar: Score Ajustado >0,5 acima do melhor ativo já em carteira, OU tese atual comprometida por evento qualitativo.
 
-### REGRA C-1: Composição do Universo do Cenário C
+### Formato esperado da Carteira C
 
-O universo do Cenário C é a **união** entre:
-1. Ativos da planilha Excel fornecida pelo usuário (qualquer classe: ações BR, FIIs, cripto, ETFs/BDRs, RF)
-2. *Opcional:* ativos da Carteira Finclass que o usuário marcar explicitamente para entrar no Cenário C (default: NÃO entram — Finclass é universo do A e B)
-
-**Não existe** "buscar ativo no mercado por conta própria". O analista trabalha apenas com o que o usuário trouxe.
-
-### REGRA C-2: Formato esperado da planilha Excel
-
-A skill deve aceitar variações razoáveis. Mínimo: uma coluna com os tickers. Colunas opcionais:
+A skill deve aceitar variações razoáveis do arquivo (Excel/CSV). Mínimo: uma coluna com os tickers. Colunas opcionais:
 
 | Coluna | Obrigatória? | Uso |
 |--------|--------------|-----|
@@ -117,26 +111,10 @@ A skill deve aceitar variações razoáveis. Mínimo: uma coluna com os tickers.
 | `Preço alvo manual` | Não | Sobrescreve o cálculo de VI da Seção 06 do score |
 | `Stop manual` | Não | Sobrescreve cálculo automático de stop |
 
-Se a planilha tiver formato diferente (ex: tickers em linha única separados por vírgula): aceitar e extrair. **Em caso de dúvida sobre qual coluna é o ticker → perguntar ao usuário antes de coletar dados.**
+Se o arquivo tiver formato diferente (ex: tickers em linha única separados por vírgula): aceitar e extrair. **Em caso de dúvida sobre qual coluna é o ticker → perguntar ao usuário antes de coletar dados.**
 
-### REGRA C-3: Tese non-consensus obrigatória (mantida)
-Obrigatório incluir pelo menos 1 ativo do universo do Cenário C com tese genuinamente non-consensus:
-- Nomear explicitamente qual ativo é a tese non-consensus
-- Justificar POR QUE o mercado está errado sobre ele
-- Passar no Teste de Segundo Nível: "O mercado está errado sobre este ativo, e eu sei por quê?"
-- Não confundir non-consensus com "ativo polêmico" — a tese precisa ser fundamentada
-
-Se nenhum ativo do universo trazido passar no Teste de Segundo Nível: **declarar no relatório** que nenhuma tese non-consensus foi identificada e que o Cenário C apresentado é "convexidade de convicção alta sem non-consensus declarado". Não inventar non-consensus para cumprir tabela.
-
-### REGRA C-4: Filtro de liquidez obrigatório (mantida)
-Para cada ativo recomendado no Cenário C:
-- Verificar volume médio diário negociado (Investidor10 para ações/FIIs; CoinMarketCap para cripto — ambos via firecrawl)
-- Volume ≥ 10× o valor do aporte alocado naquele ativo
-- Declarar o volume na tabela antes de incluir
-- Se o script não conseguir o volume: **aplicar fail-loud** (perguntar ao usuário). Não excluir silenciosamente.
-
-### REGRA C-5: Mesmas métricas obrigatórias (mantida)
-Todas as métricas obrigatórias se aplicam:
+### REGRA C-5: Mesmas métricas obrigatórias
+Todas as métricas obrigatórias se aplicam, iguais aos Cenários A e B:
 - Valor Intrínseco Estimado + Método VI
 - Margem de Segurança (%)
 - Carry Anualizado (%)
@@ -145,23 +123,23 @@ Todas as métricas obrigatórias se aplicam:
 - Score Ajustado Final (usando a classe ARCA mais adequada)
 
 ### REGRA C-6: Cobertura via Firecrawl
-Se algum ticker da planilha não for encontrado nem na fonte preferencial (Investidor10/CoinMarketCap) nem na busca livre do firecrawl (ex: ação americana sem BDR, ETF estrangeiro, ouro físico):
+Se algum ticker da Carteira C não for encontrado nem na fonte preferencial (Investidor10/CoinMarketCap) nem na busca livre do firecrawl (ex: ação americana sem BDR, ETF estrangeiro, ouro físico):
 1. Declarar explicitamente no relatório: "Ticker X não coberto pelas fontes disponíveis via firecrawl."
 2. Pedir ao usuário os dados manualmente (regra fail-loud), OU
 3. Excluir do Cenário C declarando o motivo no Veredito.
 
 A busca livre do firecrawl já foi tentada antes de chegar a este ponto — não há uma "próxima fonte" a tentar além dela.
 
-### COMO SELECIONAR ATIVOS NO CENÁRIO C
-1. Confirmar com o usuário se quer anexar a planilha (REGRA C-0)
-2. Se sim: ler a planilha → extrair tickers → confirmar parsing com o usuário se houver ambiguidade
-3. Coletar dados via firecrawl (Investidor10 para ações/FIIs, CoinMarketCap para cripto — split por classe)
-4. Para campos `_missing`: aplicar fail-loud (perguntar ao usuário)
-5. Calcular Score Ajustado Final de cada candidato
-6. Filtrar por liquidez (regra C-4)
-7. Verificar se algum passa no Teste de Segundo Nível
-8. Selecionar 3-5 ativos: mix de alta convicção + tese non-consensus
-9. Declarar qual é a tese non-consensus (ou declarar ausência conforme C-3)
+### COMO DISTRIBUIR O APORTE NO CENÁRIO C
+1. Ler a Carteira C (detectada na Etapa 0.5 ou anexada pelo usuário) → extrair tickers → confirmar parsing se houver ambiguidade
+2. Coletar dados via firecrawl (Investidor10 para ações/FIIs, CoinMarketCap para cripto — split por classe)
+3. Para campos `_missing`: aplicar fail-loud (perguntar ao usuário)
+4. Calcular Score Ajustado Final de todos os ativos da Carteira C
+5. Ordenar por Score decrescente
+6. Verificar ativos já em carteira com score alto (prioridade, regra C-4)
+7. Selecionar top 3-5 ativos (evitar fragmentar demais o aporte)
+8. Distribuir proporcionalmente ao Score: ativo com Score 9,0 recebe mais do que Score 7,5
+9. Respeitar tetos de concentração (Score <8,0 → máx 20% do patrimônio; 8,0-8,9 → máx 30%; ≥9,0 → máx 40%)
 
 ---
 
